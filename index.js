@@ -151,12 +151,14 @@ async function buildDCA() {
     const amounts = [getCleanAmount(Decimal(config.startAmount).div(prices[0]).toNumber())];
     averages = [Decimal(sumProduct(prices, amounts)).div(amounts[0]).toNumber()];
 
-    const allBalance = await tryCatch(fetchBalanceWithRetry());
-    if (allBalance.success) {
-        balance = allBalance.result[config.pair.split('/')[0]];
-    } else {
-        console.log(allBalance.error);
-        process.exit(1);
+    if (config.live) {
+        const allBalance = await tryCatch(fetchBalanceWithRetry());
+        if (allBalance.success) {
+            balance = allBalance.result[config.pair.split('/')[0]];
+        } else {
+            console.log(allBalance.error);
+            process.exit(1);
+        }
     }
 
     config.dca.forEach(dcaAmount => {
@@ -173,7 +175,7 @@ async function buildDCA() {
         // Calculate average price when this dca gets fulfilled
         averages.push(Decimal(sumProduct(prices, amounts)).div(sum * 2).toNumber());
 
-        if (sum * 2 > balance.free) {
+        if (config.live && sum * 2 > balance.free) {
             console.log('Insufficient trading balance with set parameters. Need ' + sum * 2 + ' ' + config.pair[0] + ' available for trading');
             process.exit(1);
         }
@@ -263,8 +265,9 @@ async function checkOrdersWithBuyOrder() {
         let buyPrice = getCleanPriceFloor(Decimal(average).mul(1 - (config.profit / 100)));
         let amount = getCleanAmountFloor(sum * average / buyPrice);
 
-        if (buyPrice > buyOrderPrice) {
-            console.log('New buy price found because sell Orders got filled');
+        if (buyPrice > buyOrderPrice || amount > order.result.amount) {
+            amount = amount - order.result.filled;
+            console.log('New buy price or amount found because sell Orders got filled');
             console.log('Cancelling old buy order ...');
             const order = await tryCatch(cancelOrderWithRetry(buyOrder));
             if (order.success) {
