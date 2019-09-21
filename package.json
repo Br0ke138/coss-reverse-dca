@@ -1,0 +1,17 @@
+{
+  "name": "reverse-dca",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Julian Schmidt aka. Br0ke138",
+  "license": "GNU GPLv3",
+  "dependencies": {
+    "ccxt": "1.18.823",
+    "decimal": "0.0.2",
+    "lowdb": "1.0.0",
+    "sum-product": "1.0.0"
+  }
+}

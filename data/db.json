@@ -1,0 +1,8 @@
+{
+  "sellOrders": [],
+  "buyOrder": null,
+  "buyOrderPrice": null,
+  "firstSellPrice": null,
+  "firstSellTime": null,
+  "unrecoverable": false
+}

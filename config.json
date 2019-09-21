@@ -1,0 +1,13 @@
+{
+  "publicKey": "Your Public Key",
+  "privateKey": "Your Private Key or also named Secret",
+  "pair": "COS_ETH",
+  "startAmount": 0.02,
+  "startPricePercent": 0,
+  "dca": [
+    2, 2, 2, 2, 2, 5, 5, 5
+  ],
+  "profit": 0,
+  "secondsToKeepDCA": 30,
+  "live": false
+}
