@@ -370,9 +370,9 @@ async function tryCatch(promise) {
 async function fetchTradingRestrictionWithRetry(retries = 5) {
     return new Promise(async (resolve, reject) => {
         for (let i = 1; i <= retries; i++) {
-            let limits = await coss.webGetCoinsGetBaseList();
-            if (limits && limits.length > 0) {
-                limits.forEach(limit => {
+            let limits = await tryCatch(coss.webGetCoinsGetBaseList());
+            if (limits.success && limits.result.length > 0) {
+                limits.result.forEach(limit => {
                     if (limit.currency === config.pair.split('/')[1]) {
                         if (config.startAmount < minOrderSize) {
                             reject(new Error('startAmount is to low on this quote. Need atleast: ' + limit.limit));
@@ -392,9 +392,9 @@ async function fetchTradingRestrictionWithRetry(retries = 5) {
 async function fetchTradingPrecisionWithRetry(retries = 5) {
     return new Promise(async (resolve, reject) => {
         for (let i = 1; i <= retries; i++) {
-            let symbols = await coss.webGetOrderSymbols();
-            if (symbols && symbols.length > 0) {
-                symbols.forEach(symbol => {
+            let symbols = await tryCatch(coss.webGetOrderSymbols());
+            if (symbols.success && symbols.result.length > 0) {
+                symbols.result.forEach(symbol => {
                     if (symbol.symbol === config.pair.replace('/', '_')) {
                         resolve({
                             amountPrecision: symbol['amount_limit_decimal'],
@@ -413,13 +413,12 @@ async function fetchTradingPrecisionWithRetry(retries = 5) {
 async function fetchOrderWithRetry(id, retries = 5) {
     return new Promise(async (resolve, reject) => {
         for (let i = 1; i <= retries; i++) {
-            const order = await coss.fetchOrder(id, config.pair.replace('/', '_'));
-            if (order && order['id']) {
-                resolve(order);
+            const order = await tryCatch(coss.fetchOrder(id, config.pair.replace('/', '_')));
+            if (order.success && order.result['id']) {
+                resolve(order.result);
                 return;
             }
         }
-        console.log(id);
         reject(new Error('Unable to fetch Order with id: ' + id));
     })
 }
@@ -428,9 +427,9 @@ async function fetchOrderWithRetry(id, retries = 5) {
 async function placeSellOrderWithRetry(price, amount, retries = 5) {
     return new Promise(async (resolve, reject) => {
         for (let i = 1; i <= retries; i++) {
-            const order = await coss.createLimitSellOrder(config.pair, amount, price);
-            if (order && order['id']) {
-                resolve(order);
+            const order = await tryCatch(coss.createLimitSellOrder(config.pair, amount, price));
+            if (order.success && order.result['id']) {
+                resolve(order.result);
                 return;
             }
         }
@@ -443,8 +442,8 @@ async function placeBuyOrderWithRetry(price, amount, retries = 5) {
     return new Promise(async (resolve, reject) => {
         for (let i = 1; i <= retries; i++) {
             const order = await coss.createLimitBuyOrder(config.pair, amount, price);
-            if (order && order['id']) {
-                resolve(order);
+            if (order.success && order.result['id']) {
+                resolve(order.result);
                 return;
             }
         }
@@ -459,8 +458,8 @@ async function cancelOrderWithRetry(id, retries = 5) {
         if (order.success) {
             if (order.result.status === 'open') {
                 for (let i = 1; i <= retries; i++) {
-                    const order = await coss.cancelOrder(id, config.pair.replace('_', '/'));
-                    if (order && order['id']) {
+                    const order = await tryCatch(coss.cancelOrder(id, config.pair.replace('_', '/')));
+                    if (order.success && order.result['id']) {
                         resolve('Order canceled');
                         return;
                     }
@@ -512,9 +511,9 @@ async function cancelAllOrders(retries = 3) {
 async function fetchBalanceWithRetry(retries = 5) {
     return new Promise(async (resolve, reject) => {
         for (let i = 1; i <= retries; i++) {
-            const balance = await coss.fetchBalance();
-            if (balance) {
-                resolve(balance);
+            const balance = await tryCatch(coss.fetchBalance());
+            if (balance.success) {
+                resolve(balance.result);
                 return;
             }
         }
@@ -526,9 +525,9 @@ async function fetchBalanceWithRetry(retries = 5) {
 async function getLowestSellPriceWithRetry(retries = 5) {
     return new Promise(async (resolve, reject) => {
         for (let i = 1; i <= retries; i++) {
-            let ticker = await coss.fetchTicker(config.pair.replace('_', '/'));
-            if (ticker && ticker['ask']) {
-                resolve(ticker.ask);
+            let ticker = await tryCatch(coss.fetchTicker(config.pair.replace('_', '/')));
+            if (ticker.success && ticker.result['ask']) {
+                resolve(ticker.result.ask);
                 return;
             }
         }
