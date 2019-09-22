@@ -1,0 +1,6 @@
+{
+  "name": "Coss reverse dca bot",
+  "description": "A bot for coss.io",
+  "repository": "https://github.com/Br0ke138/coss-reverse-dca",
+  "keywords": ["node", "ccxt", "coss"]
+}
