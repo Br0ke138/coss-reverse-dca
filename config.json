@@ -7,7 +7,7 @@
   "dca": [
     2, 2, 2, 2, 2, 5, 5, 5
   ],
-  "profit": 0,
+  "profit": 1,
   "secondsToKeepDCA": 30,
   "live": false
 }
