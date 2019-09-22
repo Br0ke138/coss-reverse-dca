@@ -441,7 +441,7 @@ async function placeSellOrderWithRetry(price, amount, retries = 5) {
 async function placeBuyOrderWithRetry(price, amount, retries = 5) {
     return new Promise(async (resolve, reject) => {
         for (let i = 1; i <= retries; i++) {
-            const order = await coss.createLimitBuyOrder(config.pair, amount, price);
+            const order = await tryCatch(coss.createLimitBuyOrder(config.pair, amount, price));
             if (order.success && order.result['id']) {
                 resolve(order.result);
                 return;
