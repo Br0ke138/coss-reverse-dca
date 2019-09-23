@@ -12,6 +12,7 @@ db.defaults({sellOrders: [], buyOrder: null, buyOrderPrice: null, firstSellPrice
     .write();
 
 const config = require('./config.json');
+const MAX_FEE = 1 - (0.25 / 100);
 
 // --------------------------------------------------------
 
@@ -226,6 +227,7 @@ function timeout(ms) {
 }
 
 async function checkOrdersWithBuyOrder() {
+    console.log('Checking buy order ...');
     const order = await tryCatch(fetchOrderWithRetry(buyOrder));
 
     if (!order.success) {
@@ -245,7 +247,7 @@ async function checkOrdersWithBuyOrder() {
         await buildDCA();
     } else {
         console.log('buyOrder still alive');
-        console.log('Checking if something got filled');
+        console.log('Checking sell orders ...');
         const filled = [];
         const price = [];
         let sum = 0;
@@ -254,6 +256,7 @@ async function checkOrdersWithBuyOrder() {
             if (order.success) {
                 filled.push(order.result.filled);
                 price.push(order.result.price);
+                    console.log(order);
                 sum += order.result.filled;
             } else {
                 checkForUpdate();
@@ -263,10 +266,11 @@ async function checkOrdersWithBuyOrder() {
 
         let average = Decimal(sumProduct(price, filled)).div(sum).toNumber();
         let buyPrice = getCleanPriceFloor(Decimal(average).mul(1 - (config.profit / 100)));
-        let amount = getCleanAmountFloor(sum * average / buyPrice);
+        let amount = getCleanAmountFloor(Decimal(Decimal(Decimal(sum).mul(average).toNumber()).div(buyPrice).toNumber()).mul(MAX_FEE).toNumber());
 
-        if (buyPrice > buyOrderPrice || amount > order.result.amount) {
-            amount = amount - order.result.filled;
+        const oldBuyOrder = order.result;
+        if (buyPrice > buyOrderPrice || amount > oldBuyOrder.amount) {
+            amount = amount - oldBuyOrder.filled;
             console.log('New buy price or amount found because sell Orders got filled');
             console.log('Cancelling old buy order ...');
             const order = await tryCatch(cancelOrderWithRetry(buyOrder));
@@ -303,7 +307,7 @@ async function checkOrdersWithBuyOrder() {
 }
 
 async function checkOrders() {
-    console.log('Checking if something got filled');
+    console.log('Checking sell orders ...');
     const filled = [];
     const price = [];
     let sum = 0;
@@ -323,7 +327,7 @@ async function checkOrders() {
         console.log('Found filled sell Orders. Calculating buy price and amount ...');
         let average = Decimal(sumProduct(price, filled)).div(sum).toNumber();
         let buyPrice = getCleanPriceFloor(Decimal(average).mul(1 - (config.profit / 100)));
-        let amount = getCleanAmountFloor(sum * average / buyPrice);
+        let amount = getCleanAmountFloor(Decimal(Decimal(Decimal(sum).mul(average).toNumber()).div(buyPrice).toNumber()).mul(MAX_FEE).toNumber());
 
         if (amount > buyPrice * minOrderSize) {
             console.log('Placing buy order at price: ' + buyPrice + ' and amount: ' + amount);
