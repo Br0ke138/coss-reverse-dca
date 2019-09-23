@@ -256,7 +256,6 @@ async function checkOrdersWithBuyOrder() {
             if (order.success) {
                 filled.push(order.result.filled);
                 price.push(order.result.price);
-                    console.log(order);
                 sum += order.result.filled;
             } else {
                 checkForUpdate();
