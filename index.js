@@ -254,7 +254,16 @@ async function checkOrdersWithBuyOrder() {
         for (sellOrder of sellOrders) {
             const order = await tryCatch(fetchOrderWithRetry(sellOrder));
             if (order.success) {
-                filled.push(order.result.filled);
+                if (order.result.filled > 0) {
+                    const orderTradeDetail = await tryCatch(fetchOrderTradeDetailWithRetry(sellOrder));
+                    if (orderTradeDetail['is_taker']) {
+                        filled.push(Decimal(order.result.filled).mul(MAX_FEE).toNumber());
+                    } else {
+                        filled.push(order.result.filled);
+                    }
+                } else {
+                    filled.push(order.result.filled);
+                }
                 price.push(order.result.price);
                 sum += order.result.filled;
             } else {
@@ -265,7 +274,7 @@ async function checkOrdersWithBuyOrder() {
 
         let average = Decimal(sumProduct(price, filled)).div(sum).toNumber();
         let buyPrice = getCleanPriceFloor(Decimal(average).mul(1 - (config.profit / 100)));
-        let amount = getCleanAmountFloor(Decimal(Decimal(Decimal(sum).mul(average).toNumber()).div(buyPrice).toNumber()).mul(MAX_FEE).toNumber());
+        let amount = getCleanAmountFloor(Decimal(Decimal(sum).mul(average).toNumber()).div(buyPrice).toNumber());
 
         const oldBuyOrder = order.result;
         if (buyPrice > buyOrderPrice || amount > oldBuyOrder.amount) {
@@ -313,7 +322,16 @@ async function checkOrders() {
     for (sellOrder of sellOrders) {
         const order = await tryCatch(fetchOrderWithRetry(sellOrder));
         if (order.success) {
-            filled.push(order.result.filled);
+            if (order.result.filled > 0) {
+                const orderTradeDetail = await tryCatch(fetchOrderTradeDetailWithRetry(sellOrder));
+                if (orderTradeDetail['is_taker']) {
+                    filled.push(Decimal(order.result.filled).mul(MAX_FEE).toNumber());
+                } else {
+                    filled.push(order.result.filled);
+                }
+            } else {
+                filled.push(order.result.filled);
+            }
             price.push(order.result.price);
             sum += order.result.filled;
         } else {
@@ -326,7 +344,7 @@ async function checkOrders() {
         console.log('Found filled sell Orders. Calculating buy price and amount ...');
         let average = Decimal(sumProduct(price, filled)).div(sum).toNumber();
         let buyPrice = getCleanPriceFloor(Decimal(average).mul(1 - (config.profit / 100)));
-        let amount = getCleanAmountFloor(Decimal(Decimal(Decimal(sum).mul(average).toNumber()).div(buyPrice).toNumber()).mul(MAX_FEE).toNumber());
+        let amount = getCleanAmountFloor(Decimal(Decimal(sum).mul(average).toNumber()).div(buyPrice).toNumber());
 
         if (amount > buyPrice * minOrderSize) {
             console.log('Placing buy order at price: ' + buyPrice + ' and amount: ' + amount);
@@ -423,6 +441,20 @@ async function fetchOrderWithRetry(id, retries = 5) {
             }
         }
         reject(new Error('Unable to fetch Order with id: ' + id));
+    })
+}
+
+// Get a specific order trade detail
+async function fetchOrderTradeDetailWithRetry(id, retries = 5) {
+    return new Promise(async (resolve, reject) => {
+        for (let i = 1; i <= retries; i++) {
+            const orderTradeDetail = await tryCatch(coss.tradePostOrderTradeDetail({order_id: id}));
+            if (orderTradeDetail.success && orderTradeDetail.result.length > 0) {
+                resolve(orderTradeDetail.result[0]);
+                return;
+            }
+        }
+        reject(new Error('Unable to fetch Order Trade Detail with id: ' + id));
     })
 }
 
