@@ -172,12 +172,13 @@ async function buildDCA() {
         }
     }
 
+    var sum = 0;
     config.dca.forEach(dcaAmount => {
         // Calculate price where to dca
         prices.push(getCleanPrice(Decimal(averages[averages.length - 1]).mul(1 + dcaAmount / 100).toNumber()));
 
         // Amount to buy at this level
-        var sum = 0;
+        sum = 0;
         amounts.forEach(amount => {
             sum += amount;
         });
@@ -185,12 +186,12 @@ async function buildDCA() {
 
         // Calculate average price when this dca gets fulfilled
         averages.push(Decimal(sumProduct(prices, amounts)).div(sum * 2).toNumber());
-
-        if (config.live && sum * 2 > balance.free) {
-            console.log('Insufficient trading balance with set parameters. Need ' + sum * 2 + ' ' + config.pair[0] + ' available for trading');
-            process.exit(1);
-        }
     });
+    if (config.live && sum * 2 > balance.free) {
+        console.log('Insufficient trading balance with set parameters. Need ' + sum * 2 + ' ' + config.pair.split('/')[0] + ' available for trading');
+        process.exit(1);
+    }
+    
     console.log('------------------------------BUILDING DCA------------------------------');
     for (let [index, price] of prices.entries()) {
         if (config.live) {
