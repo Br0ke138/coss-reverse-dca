@@ -30,6 +30,12 @@ Placed sell order with price: 0.000137 and amount: 22069.76 | averagePrice: 0.00
 ------------------------------------------------------------------------
 ```
 
+### Example Calculation of balance needed
+![Excel](https://github.com/Br0ke138/coss-reverse-dca/blob/master/Trade_Cycle.PNG)
+
+### Example trade cycle
+![Trade Cycle](https://github.com/Br0ke138/coss-reverse-dca/blob/master/Trade_Cycle.PNG)
+
 # How to use
 - Ensure you have Node.js installed: [https://nodejs.org/en/download/](https://nodejs.org/en/download/)
 - Copy repository (the bot/script)
