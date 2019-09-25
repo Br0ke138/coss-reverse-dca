@@ -156,6 +156,16 @@ async function buildDCA() {
         const allBalance = await tryCatch(fetchBalanceWithRetry());
         if (allBalance.success) {
             balance = allBalance.result[config.pair.split('/')[0]];
+            // DEBUGGING PURPOSE
+            if (!balance || !balance['free']) {
+                console.log('Please message @Br0ke138 the following:');
+                console.log('Balance for symbol: ' + config.pair.split('/')[0] + ' not found');
+                console.log(allBalance.result);
+
+                console.log('Will retry to build DCA structure');
+                await buildDCA();
+                return;
+            }
         } else {
             console.log(allBalance.error);
             process.exit(1);
